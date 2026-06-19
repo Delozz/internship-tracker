@@ -1,8 +1,0 @@
-[phases.install]
-cmds = [
-  "pip install -r scraper/requirements.txt",
-  "playwright install chromium",
-]
-
-[start]
-cmd = "python -m scraper.main"
