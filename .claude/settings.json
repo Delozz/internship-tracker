@@ -1,0 +1,155 @@
+{
+  "model": "claude-sonnet-4-6",
+
+  "permissions": {
+    "defaultMode": "acceptEdits",
+
+    "allow": [
+      "Read(**)",
+      "Glob(**)",
+
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git branch *)",
+      "Bash(git stash *)",
+      "Bash(git fetch *)",
+
+      "Bash(npm install *)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm run preview)",
+      "Bash(npm create *)",
+      "Bash(npx *)",
+
+      "Bash(pip install *)",
+      "Bash(pip install -r *)",
+      "Bash(python -m pip install *)",
+
+      "Bash(uvicorn *)",
+      "Bash(python main.py --run-now)",
+      "Bash(python -m pytest *)",
+      "Bash(python -c *)",
+
+      "Bash(ruff check *)",
+      "Bash(ruff format *)",
+      "Bash(black *)",
+
+      "Bash(playwright install chromium)",
+
+      "Bash(mkdir *)",
+      "Bash(copy *)",
+      "Bash(move *)",
+      "Bash(dir *)",
+      "Bash(type *)",
+      "Bash(echo *)",
+      "Bash(where *)",
+      "Bash(cd *)",
+
+      "Bash(node *)",
+      "Bash(python *)"
+    ],
+
+    "deny": [
+      "Bash(git push *)",
+      "Bash(git push)",
+
+      "Bash(rm *)",
+      "Bash(del *)",
+      "Bash(rd /s *)",
+      "Bash(rmdir /s *)",
+      "Bash(rmdir *)",
+      "Bash(Remove-Item *)",
+
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(Invoke-WebRequest *)",
+
+      "Bash(type .env)",
+      "Bash(type .env.*)",
+      "Bash(type *settings.local.json)",
+      "Bash(echo * > .env)",
+      "Bash(Get-Content .env)",
+      "Bash(Get-Content *settings.local.json)",
+      "Bash(set *KEY*)",
+
+      "Bash(npm publish *)",
+      "Bash(pip publish *)",
+      "Bash(twine *)",
+
+      "Bash(vercel *)",
+      "Bash(railway *)",
+
+      "Bash(python main.py)",
+
+      "Bash(icacls * /grant *)",
+      "Bash(runas *)"
+    ],
+
+    "ask": [
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git reset *)",
+      "Bash(git revert *)",
+      "Bash(git tag *)",
+
+      "Bash(npm uninstall *)",
+      "Bash(pip uninstall *)",
+
+      "Bash(Set-ExecutionPolicy *)"
+    ]
+  },
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit(frontend/**/*.jsx)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd frontend && npx prettier --write \"%CLAUDE_FILE_PATH%\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit(frontend/**/*.js)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd frontend && npx prettier --write \"%CLAUDE_FILE_PATH%\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit(api/**/*.py)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "black \"%CLAUDE_FILE_PATH%\" && ruff check --fix \"%CLAUDE_FILE_PATH%\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit(scraper/**/*.py)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "black \"%CLAUDE_FILE_PATH%\" && ruff check --fix \"%CLAUDE_FILE_PATH%\""
+          }
+        ]
+      }
+    ]
+  },
+
+  "env": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUNBUFFERED": "1",
+    "NODE_ENV": "development",
+    "PYTHONUTF8": "1",
+    "ECC_GATEGUARD": "off"
+  }
+}
