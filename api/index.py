@@ -6,7 +6,10 @@ app = FastAPI(title="Internship Tracker API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://*.vercel.app"],
+    # Wildcard subdomains must use a regex — CORSMiddleware matches
+    # allow_origins by exact string, so "https://*.vercel.app" never matches.
+    allow_origins=["http://localhost:5173"],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["*"],
 )
