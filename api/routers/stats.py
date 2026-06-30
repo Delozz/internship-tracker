@@ -28,11 +28,13 @@ def get_stats() -> StatsResponse:
     today_str = today.isoformat()
     in_14_days = (today + timedelta(days=14)).isoformat()
 
-    # Total active listings — head=True returns the count without transferring rows
+    # Total active listings — count comes back in the Content-Range header;
+    # limit(1) keeps the row payload minimal. (postgrest 0.16 has no head= kwarg.)
     listings_resp = (
         client.table("listings")
-        .select("id", count="exact", head=True)
+        .select("*", count="exact")
         .eq("is_active", True)
+        .limit(1)
         .execute()
     )
     total_listings = listings_resp.count or 0
@@ -40,9 +42,10 @@ def get_stats() -> StatsResponse:
     # New listings added today
     new_resp = (
         client.table("listings")
-        .select("id", count="exact", head=True)
+        .select("*", count="exact")
         .eq("is_active", True)
         .gte("created_at", today_str)
+        .limit(1)
         .execute()
     )
     new_listings_today = new_resp.count or 0
