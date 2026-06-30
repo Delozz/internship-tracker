@@ -24,6 +24,13 @@ const STATUSES = [
   { key: "withdrawn", label: "Withdrawn" },
 ];
 
+const STATUS_LABEL = Object.fromEntries(STATUSES.map((s) => [s.key, s.label]));
+
+function formatDate(dateStr) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 function DroppableColumn({ status, children }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
@@ -65,6 +72,7 @@ export default function Tracker() {
   const [draft, setDraft] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [newApp, setNewApp] = useState({ company: "", role: "", status: "saved" });
+  const [view, setView] = useState("board");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -141,19 +149,37 @@ export default function Tracker() {
 
   const byStatus = Object.fromEntries(STATUSES.map((s) => [s.key, []]));
   apps.forEach((a) => { if (byStatus[a.status]) byStatus[a.status].push(a); });
+  const sortedByNewest = [...apps].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-white">Tracker</h1>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="text-sm px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
-        >
-          + Add manually
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-md border border-gray-700 overflow-hidden text-xs">
+            <button
+              onClick={() => setView("board")}
+              className={`px-3 py-1.5 transition-colors ${view === "board" ? "bg-indigo-600 text-white" : "bg-gray-800 text-gray-400 hover:text-gray-200"}`}
+            >
+              Board
+            </button>
+            <button
+              onClick={() => setView("list")}
+              className={`px-3 py-1.5 transition-colors ${view === "list" ? "bg-indigo-600 text-white" : "bg-gray-800 text-gray-400 hover:text-gray-200"}`}
+            >
+              List
+            </button>
+          </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="text-sm px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
+          >
+            + Add manually
+          </button>
+        </div>
       </div>
 
+      {view === "board" ? (
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-4">
           {STATUSES.map((s) => (
@@ -173,6 +199,42 @@ export default function Tracker() {
           ))}
         </div>
       </DndContext>
+      ) : sortedByNewest.length === 0 ? (
+        <div className="text-gray-500 py-12 text-center text-sm">No applications yet.</div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-gray-800">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3">Company</th>
+                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Deadline</th>
+                <th className="px-4 py-3">Added</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedByNewest.map((app) => (
+                <tr
+                  key={app.id}
+                  onClick={() => openDrawer(app)}
+                  className="border-b border-gray-800/50 hover:bg-gray-900 cursor-pointer transition-colors"
+                >
+                  <td className="px-4 py-3 font-medium text-white">{app.company}</td>
+                  <td className="px-4 py-3 text-gray-300">{app.role}</td>
+                  <td className="px-4 py-3">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">
+                      {STATUS_LABEL[app.status] ?? app.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-400">{app.deadline ?? "—"}</td>
+                  <td className="px-4 py-3 text-gray-500">{formatDate(app.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Detail drawer */}
       {selected && draft && (
