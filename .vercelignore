@@ -1,0 +1,8 @@
+# Keep Vercel from installing the scraper's heavy deps (playwright, lxml) into
+# the API serverless function. The root requirements.txt exists only for Railway
+# (which runs scraper/main.py from the repo root); Vercel's API function gets its
+# deps from api/requirements.txt instead. Railway does not read .vercelignore.
+/requirements.txt
+
+# Scraper code is never part of the Vercel build (it runs on Railway).
+/scraper
