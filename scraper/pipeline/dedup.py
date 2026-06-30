@@ -11,6 +11,37 @@ def make_dedup_key(company: str, title: str, location: str) -> str:
     return f"{_normalize(company)}|{_normalize(title)}|{_normalize(location or '')}"
 
 
+def load_existing_index(client: Client) -> tuple[dict[str, str], dict[str, str]]:
+    """Load all existing listings once for in-memory dedup.
+
+    Returns (by_url, by_key): two dicts mapping to the existing listing id.
+    This replaces per-listing DB lookups (1-2 round trips each) with a single
+    paginated scan, so a scrape of N listings costs O(N/page) queries, not O(N).
+    """
+    by_url: dict[str, str] = {}
+    by_key: dict[str, str] = {}
+    offset = 0
+    page = 1000
+    while True:
+        resp = (
+            client.table("listings")
+            .select("id,url,company,title,location")
+            # paginate — table can hold thousands (L4)
+            .range(offset, offset + page - 1)
+            .execute()
+        )
+        rows = resp.data
+        for row in rows:
+            if row.get("url"):
+                by_url[row["url"]] = row["id"]
+            key = make_dedup_key(row["company"], row["title"], row.get("location", ""))
+            by_key[key] = row["id"]
+        if len(rows) < page:
+            break
+        offset += page
+    return by_url, by_key
+
+
 def is_duplicate(client: Client, company: str, title: str, location: str, url: Optional[str]) -> Optional[str]:
     """Return the existing listing id if a duplicate exists, else None.
 
