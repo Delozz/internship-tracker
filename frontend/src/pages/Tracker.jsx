@@ -24,8 +24,6 @@ const STATUSES = [
   { key: "withdrawn", label: "Withdrawn" },
 ];
 
-const COLUMN_ORDER = JSON.parse(localStorage.getItem("kanban_col_order") ?? "null") ?? STATUSES.map((s) => s.key);
-
 function DroppableColumn({ status, children }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
@@ -113,8 +111,13 @@ export default function Tracker() {
   async function handleDragEnd(event) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const targetStatus = STATUSES.find((s) => s.key === over.id)?.key ?? over.id;
+    // `over.id` is a status key when dropped on empty column space, but a card's
+    // id when dropped onto another card — resolve the latter back to its column.
+    const overApp = apps.find((a) => a.id === over.id);
+    const targetStatus = STATUSES.find((s) => s.key === over.id)?.key ?? overApp?.status;
     if (!targetStatus) return;
+    const current = apps.find((a) => a.id === active.id);
+    if (current?.status === targetStatus) return;
     try {
       await patchApplication(active.id, { status: targetStatus });
       setApps((prev) => prev.map((a) => (a.id === active.id ? { ...a, status: targetStatus } : a)));

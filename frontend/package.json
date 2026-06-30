@@ -9,6 +9,26 @@
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx"
   },
+  "eslintConfig": {
+    "root": true,
+    "env": { "browser": true, "es2021": true },
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module",
+      "ecmaFeatures": { "jsx": true }
+    },
+    "settings": { "react": { "version": "detect" } },
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:react/jsx-runtime",
+      "plugin:react-hooks/recommended"
+    ],
+    "rules": {
+      "react/prop-types": "off",
+      "no-unused-vars": ["error", { "ignoreRestSiblings": true }]
+    }
+  },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/sortable": "^8.0.0",

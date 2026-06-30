@@ -28,12 +28,11 @@ def get_stats() -> StatsResponse:
     today_str = today.isoformat()
     in_14_days = (today + timedelta(days=14)).isoformat()
 
-    # Total active listings
+    # Total active listings — head=True returns the count without transferring rows
     listings_resp = (
         client.table("listings")
-        .select("*", count="exact")
+        .select("id", count="exact", head=True)
         .eq("is_active", True)
-        .limit(1)
         .execute()
     )
     total_listings = listings_resp.count or 0
@@ -41,10 +40,9 @@ def get_stats() -> StatsResponse:
     # New listings added today
     new_resp = (
         client.table("listings")
-        .select("*", count="exact")
+        .select("id", count="exact", head=True)
         .eq("is_active", True)
         .gte("created_at", today_str)
-        .limit(1)
         .execute()
     )
     new_listings_today = new_resp.count or 0
