@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
-import { getListings, createApplication } from "../api/client.js";
+import { getListings, getApplications, createApplication } from "../api/client.js";
 import FilterBar from "../components/FilterBar.jsx";
 
 const ROLE_BADGE = {
@@ -25,7 +25,15 @@ export default function Listings() {
   const [data, setData] = useState({ data: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
+  const [savedIds, setSavedIds] = useState(() => new Set());
   const LIMIT = 50;
+
+  // Listing ids already in the tracker — used to prevent duplicate saves.
+  useEffect(() => {
+    getApplications()
+      .then((apps) => setSavedIds(new Set(apps.map((a) => a.listing_id).filter(Boolean))))
+      .catch(() => {}); // non-fatal — Save just won't show as already-saved
+  }, []);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -53,6 +61,7 @@ export default function Listings() {
         status: "saved",
         deadline: listing.deadline ?? undefined,
       });
+      setSavedIds((prev) => new Set(prev).add(listing.id));
       toast.success(`Saved ${listing.company} to tracker`);
     } catch {
       toast.error("Failed to save");
@@ -117,13 +126,17 @@ export default function Listings() {
                       <td className="px-4 py-3 text-gray-500">{SOURCE_LABEL[l.source] ?? l.source}</td>
                       <td className={`px-4 py-3 ${deadlineCls}`}>{l.deadline ?? "—"}</td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleSave(l)}
-                          disabled={saving[l.id]}
-                          className="text-xs px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 transition-colors"
-                        >
-                          {saving[l.id] ? "Saving…" : "Save"}
-                        </button>
+                        {savedIds.has(l.id) ? (
+                          <span className="text-xs px-3 py-1 text-green-400">✓ Saved</span>
+                        ) : (
+                          <button
+                            onClick={() => handleSave(l)}
+                            disabled={saving[l.id]}
+                            className="text-xs px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 transition-colors"
+                          >
+                            {saving[l.id] ? "Saving…" : "Save"}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
