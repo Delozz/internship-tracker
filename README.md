@@ -186,3 +186,9 @@ Defined in `supabase/schema.sql`. Two tables:
 
 - **`listings`** — scraped internship postings (`id`, `title`, `company`, `location`, `role_type`, `source`, `url`, `deadline`, `is_active`, `posted_at`, `created_at`)
 - **`applications`** — tracked applications (`id`, `listing_id`, `company`, `role`, `status`, `applied_at`, `deadline`, `notes`, `oa_date`, `interview_date`, `offer_deadline`, `created_at`, `updated_at`)
+
+---
+
+## License
+
+[MIT](LICENSE) © Devon Lopez
