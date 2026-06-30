@@ -1,24 +1,12 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
-// Applications added within this many days are flagged "New".
-const NEW_DAYS = 14;
+import { isNew, formatShortDate } from "../utils/recency.js";
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return Math.ceil((new Date(dateStr) - today) / 86400000);
-}
-
-function daysSince(dateStr) {
-  if (!dateStr) return null;
-  return Math.floor((Date.now() - new Date(dateStr)) / 86400000);
-}
-
-function formatAdded(dateStr) {
-  if (!dateStr) return null;
-  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export default function KanbanCard({ app, onClick }) {
@@ -41,9 +29,8 @@ export default function KanbanCard({ app, onClick }) {
           ? "text-amber-400"
           : "text-gray-400";
 
-  const age = daysSince(app.created_at);
-  const isNew = age != null && age <= NEW_DAYS;
-  const added = formatAdded(app.created_at);
+  const recent = isNew(app.created_at);
+  const added = formatShortDate(app.created_at);
 
   return (
     <div
@@ -56,7 +43,7 @@ export default function KanbanCard({ app, onClick }) {
     >
       <div className="flex items-start justify-between gap-2 mb-0.5">
         <p className="text-sm font-semibold text-white leading-tight">{app.company}</p>
-        {isNew && (
+        {recent && (
           <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-300">
             New
           </span>
