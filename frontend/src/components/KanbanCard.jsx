@@ -2,7 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 // Applications added within this many days are flagged "New".
-const NEW_DAYS = 2;
+const NEW_DAYS = 14;
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
