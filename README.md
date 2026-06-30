@@ -22,6 +22,16 @@ React frontend (Vercel)
 
 ---
 
+## Features
+
+- **Auto-scraping** — pulls Summer 2027 internships daily from GitHub listing repos and Simplify.jobs, with dedup + role classification (SWE / Quant / CS Research).
+- **Listings browser** — filter by role, source, company, or search; recently-scraped roles get a **"New"** badge so the freshest postings are easy to spot and save.
+- **Kanban tracker** — drag applications across the status flow (`saved → applied → … → offer / rejected`), plus a flat **newest-first list view**. Cards show the date added and flag recent additions.
+- **Dashboard** — application counts by status, a response-rate stat, a Recharts bar chart, and upcoming deadlines (next 14 days).
+- **Optional API auth** — a shared-secret `X-API-Key` gate that can be toggled on with a single env var.
+
+---
+
 ## Stack
 
 | Layer | Tech |
@@ -43,17 +53,19 @@ internship-tracker/
 ├── frontend/             React + Vite + TailwindCSS
 │   └── src/
 │       ├── api/client.js         fetch wrapper — all API calls
+│       ├── utils/recency.js      shared "New" badge / date helpers
 │       ├── pages/
-│       │   ├── Listings.jsx      table + filter bar + "Save to Tracker"
-│       │   ├── Tracker.jsx       Kanban board with drag-and-drop
+│       │   ├── Listings.jsx      table + filter bar + "Save to Tracker" (+ "New" badges)
+│       │   ├── Tracker.jsx       Kanban board (drag-and-drop) + flat newest-first list view
 │       │   └── Dashboard.jsx     stat cards, bar chart, deadlines
 │       └── components/
 │           ├── FilterBar.jsx
-│           ├── KanbanCard.jsx
+│           ├── KanbanCard.jsx    card with "Added" date + "New" badge
 │           ├── StatsPanel.jsx
 │           └── DeadlineBanner.jsx
 ├── api/                  FastAPI (Vercel serverless)
-│   ├── index.py          app entrypoint
+│   ├── index.py          app entrypoint + CORS
+│   ├── auth.py           optional shared-secret API key check
 │   ├── routers/          listings.py, applications.py, stats.py
 │   ├── models/           listing.py, application.py
 │   └── db.py             Supabase client (anon key, read-only)
@@ -64,8 +76,9 @@ internship-tracker/
 │   └── seed.py           seed Supabase with sample listings for dev
 ├── supabase/schema.sql   DB schema — run once in Supabase SQL editor
 ├── vercel.json           build config + /api/* rewrites
+├── .vercelignore         hides Railway-only deps from the Vercel build
 ├── Procfile              Railway worker start command
-├── requirements.txt      root deps for Railway (Railpack)
+├── requirements.txt      root deps for Railway (Railpack) — not used by Vercel
 ├── .python-version       pins Python 3.12 for Railway
 └── .env.example          required env vars template
 ```
@@ -146,8 +159,12 @@ python -m scraper.seed
 | `SCRAPER_CRON_HOUR` | Scraper | Hour to run daily scrape (default: `8`) |
 | `SCRAPER_CRON_MINUTE` | Scraper | Minute offset (default: `0`) |
 | `SCRAPER_TIMEZONE` | Scraper | Timezone string (default: `America/Chicago`) |
+| `API_KEY` | API | **Optional.** When set, `/api/*` data routes require header `X-API-Key`. Unset = open API. |
+| `VITE_API_KEY` | Frontend | **Optional.** Same value as `API_KEY`; baked into the build so the frontend sends the header. |
 
 See `.env.example` for the full template.
+
+> **API auth is optional and off by default.** Set `API_KEY` (API) and `VITE_API_KEY` (frontend) to the *same* value and redeploy to lock the API down; leave both unset to keep it open. `/api/health` is always open.
 
 ---
 
@@ -155,9 +172,11 @@ See `.env.example` for the full template.
 
 | Service | Hosts | Notes |
 |---|---|---|
-| Vercel Hobby | React frontend + FastAPI | Auto-deploys on push to `main`. 10s function timeout. |
+| Vercel Hobby | React frontend + FastAPI | Auto-deploys on push to `main`. 10s function timeout. Builds the API from `api/requirements.txt`. |
 | Railway | Python scraper + APScheduler | Persistent worker process. Set Build Command to `playwright install chromium`. |
 | Supabase | PostgreSQL | Run `supabase/schema.sql` once to create tables. |
+
+> **Dependency layout:** the root `requirements.txt` holds the *scraper's* heavy deps (Playwright, lxml) for Railway only. `.vercelignore` hides it from Vercel so the API builds from the lightweight `api/requirements.txt` — keep these separate to avoid Vercel trying to compile `lxml`.
 
 ---
 
@@ -167,3 +186,9 @@ Defined in `supabase/schema.sql`. Two tables:
 
 - **`listings`** — scraped internship postings (`id`, `title`, `company`, `location`, `role_type`, `source`, `url`, `deadline`, `is_active`, `posted_at`, `created_at`)
 - **`applications`** — tracked applications (`id`, `listing_id`, `company`, `role`, `status`, `applied_at`, `deadline`, `notes`, `oa_date`, `interview_date`, `offer_deadline`, `created_at`, `updated_at`)
+
+---
+
+## License
+
+[MIT](LICENSE) © Devon Lopez
