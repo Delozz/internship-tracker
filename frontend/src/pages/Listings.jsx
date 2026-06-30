@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { getListings, getApplications, createApplication } from "../api/client.js";
 import FilterBar from "../components/FilterBar.jsx";
+import { isNew } from "../utils/recency.js";
 
 const ROLE_BADGE = {
   swe: "bg-blue-500/20 text-blue-300",
@@ -107,7 +108,16 @@ export default function Listings() {
                     d == null ? "text-gray-500" : d < 0 ? "text-red-400" : d <= 7 ? "text-amber-400" : "text-gray-400";
                   return (
                     <tr key={l.id} className="border-b border-gray-800/50 hover:bg-gray-900 transition-colors">
-                      <td className="px-4 py-3 font-medium text-white">{l.company}</td>
+                      <td className="px-4 py-3 font-medium text-white">
+                        <span className="inline-flex items-center gap-1.5">
+                          {l.company}
+                          {isNew(l.created_at) && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-300">
+                              New
+                            </span>
+                          )}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-gray-300">
                         {l.url ? (
                           <a href={l.url} target="_blank" rel="noreferrer" className="hover:text-indigo-400">
