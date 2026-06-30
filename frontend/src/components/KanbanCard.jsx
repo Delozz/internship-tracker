@@ -1,11 +1,24 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+// Applications added within this many days are flagged "New".
+const NEW_DAYS = 2;
+
 function daysUntil(dateStr) {
   if (!dateStr) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return Math.ceil((new Date(dateStr) - today) / 86400000);
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return null;
+  return Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+}
+
+function formatAdded(dateStr) {
+  if (!dateStr) return null;
+  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export default function KanbanCard({ app, onClick }) {
@@ -28,6 +41,10 @@ export default function KanbanCard({ app, onClick }) {
           ? "text-amber-400"
           : "text-gray-400";
 
+  const age = daysSince(app.created_at);
+  const isNew = age != null && age <= NEW_DAYS;
+  const added = formatAdded(app.created_at);
+
   return (
     <div
       ref={setNodeRef}
@@ -37,7 +54,14 @@ export default function KanbanCard({ app, onClick }) {
       onClick={() => onClick(app)}
       className="bg-gray-800 border border-gray-700 rounded-lg p-3 cursor-grab active:cursor-grabbing hover:border-indigo-500 transition-colors select-none"
     >
-      <p className="text-sm font-semibold text-white leading-tight mb-0.5">{app.company}</p>
+      <div className="flex items-start justify-between gap-2 mb-0.5">
+        <p className="text-sm font-semibold text-white leading-tight">{app.company}</p>
+        {isNew && (
+          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-300">
+            New
+          </span>
+        )}
+      </div>
       <p className="text-xs text-gray-400 mb-2 leading-tight">{app.role}</p>
       {app.deadline && (
         <p className={`text-xs ${deadlineColor}`}>
@@ -52,6 +76,9 @@ export default function KanbanCard({ app, onClick }) {
       )}
       {app.notes && (
         <p className="text-xs text-gray-500 mt-1.5 truncate">{app.notes}</p>
+      )}
+      {added && (
+        <p className="text-[11px] text-gray-600 mt-1.5">Added {added}</p>
       )}
     </div>
   );
