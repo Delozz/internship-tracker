@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from api.auth import require_api_key
 from api.routers import listings, applications, stats
 
 app = FastAPI(title="Internship Tracker API", version="1.0.0")
@@ -14,9 +15,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(listings.router)
-app.include_router(applications.router)
-app.include_router(stats.router)
+# Data routes require the API key (no-op until API_KEY is set); health stays open.
+auth = [Depends(require_api_key)]
+app.include_router(listings.router, dependencies=auth)
+app.include_router(applications.router, dependencies=auth)
+app.include_router(stats.router, dependencies=auth)
 
 
 @app.get("/api/health")
