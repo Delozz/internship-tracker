@@ -2,7 +2,6 @@
 
 A personal full-stack web app that auto-scrapes SWE, Quant, and CS Research internship listings for Summer 2027 and tracks application status through a Kanban dashboard.
 
-**Live app:** [internship-tracker-ruddy.vercel.app](https://internship-tracker-ruddy.vercel.app)
 
 ---
 
